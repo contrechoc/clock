@@ -1,22 +1,22 @@
 /**********************************************************************
-CLOCK object contrechoc 2014, 
-
-feel free to modify etc....
-
-using a display of 8 7 segments numbers:
-http://dx.com/p/8x-led-display-digital-tube-module-for-arduino-595-driver-148820#.UtuAmPaDNsQ
-
-time chip: ds1307 (i2c)
-
-a similar script has a time chip: ds1302 (SPI), using the library of arduino.cc user "Krodal" (see tab)
-http://dx.com/p/ds1302-real-time-clock-module-with-battery-cr2032-126453#.UtuA7_aDNsQ
-
-to buttons are used to alter the settings
-digital pin 8, 9
-one LDR is used to dim the light at night
-A0
-
-***********************************************************************/ 
+ * CLOCK object contrechoc 2014, 
+ * 
+ * feel free to modify etc....
+ * 
+ * using a display of 8 7 segments numbers:
+ * http://dx.com/p/8x-led-display-digital-tube-module-for-arduino-595-driver-148820#.UtuAmPaDNsQ
+ * 
+ * time chip: ds1307 (i2c)
+ * 
+ * a similar script has a time chip: ds1302 (SPI), using the library of arduino.cc user "Krodal" (see tab)
+ * http://dx.com/p/ds1302-real-time-clock-module-with-battery-cr2032-126453#.UtuA7_aDNsQ
+ * 
+ * to buttons are used to alter the settings
+ * digital pin 8, 9
+ * one LDR is used to dim the light at night
+ * A0
+ * 
+ ***********************************************************************/
 
 // include the SPI library:
 #include <SPI.h>
@@ -28,11 +28,16 @@ RTC_DS1307 rtc;
 // set pin 10 as the slave select for the digital pot:
 const int slaveSelectPin = 10;
 
-volatile int myNumber[] = {
+  char myNumber[] = {
   10 , 11, 12, 13, 13, 0, 10, 10};
 
-volatile int myNumber2[] = {
+  char myNumber2[] = {
   42 , 42, 42, 42, 42, 42, 42, 10};
+  
+    char hello[] = {
+  18, 15, 21, 21, 22, 42, 42, 42};
+  
+
 
 volatile int ledCounter = 0;
 volatile int ledCounter2 = 0;
@@ -159,10 +164,10 @@ void loop() {
     myNumber[1] = nowDay % 10;
 
     myNumber[4] = now.minute()/10;
-    myNumber[5] =  now.minute() % 10;
+    myNumber[5] = now.minute() % 10;
 
     myNumber[6] = now.second()/10;
-    myNumber[7] =  now.second() % 10;
+    myNumber[7] = now.second() % 10;
 
     delay(100);
 
@@ -175,21 +180,21 @@ void loop() {
       else if ( hhh < 175 ) hhh = 10;
       else if ( hhh < 200 ) hhh = 20; 
       else if ( hhh < 250 ) hhh = 50;
-
+ 
       noInterrupts();
       OCR1A = 10 + hhh ;
       interrupts();
 
     }
 
-    if ( tCounter%8 == 0 ) {
-
-      tCounter2++;
-      Serial.println(tCounter2%16);
-
-      if ( tCounter2%16 <  8 ) recycleNum2PLUS(); 
-      else recycleNum2MINUS();
-
+    if ( tCounter%8 == 0 ) { //knight rider effect
+      if ( (tCounter2%14) <  7 ){
+        recycleNum2PLUS(myNumber2); 
+      }
+      else {
+        recycleNum2MINUS(myNumber2);
+      }
+        tCounter2++;
     }
 
     if ( digitalRead( 8) == LOW) { //changing the mode
@@ -200,8 +205,10 @@ void loop() {
       settingMode = 1;
       setTimeComponent = 0;
     }
+   // if ( random(10) == 5 ) settingMode = 2;
+    
   }
-  else { // *********************************************************************setting mode
+  else if ( settingMode == 1) { // *********************************************************************setting mode
     //Serial.print("setting ");
     // Serial.println(timerForSet);
     if ( digitalRead( 9) == LOW) { //changing the digit
@@ -238,6 +245,50 @@ void loop() {
       }
     }
   }
+    else if ( settingMode == 2) { // *********************************************************************playing mode
+    
+    char hr = random(4);
+    
+    if ( hr == 0 ){
+   char wordArray[] = {  42, 18,15,21,21,22,42, 42 };//hello
+ shiftInFromRight( wordArray);
+    } else if (hr == 1){
+   char wordArray[] = {  42, 42, 13,19,11,22,42, 42 };//ciao
+ shiftInFromRight( wordArray);
+    }else if (hr == 2){
+   char wordArray[] = {  18, 22, 27, 25, 15 ,42, 42 };//house
+ shiftInFromRight( wordArray);
+    }else if (hr == 3){
+   char wordArray[] = { 42,  23,21, 27, 25,  42, 42 };//plus
+ shiftInFromRight( wordArray);
+    }
+ 
+        settingMode = 0;
+    
+    }
+}
+
+void shiftInFromRight(char *wordArray ){
+   
+    char helpArray[] = { 0,0,0,0,0,0,0,0};
+    myStr8Copy(myNumber, helpArray);
+ for ( int j = 0; j < 7; j++){
+     addCharToArrayFromRight( myNumber, wordArray[j]);
+     
+      for (int i = 0; i<10000; i++ )
+        int h = digitalRead( 9);//debounce, no delay available
+ }
+ 
+  for (int i = 0; i<32000; i++ )
+        int h = digitalRead( 9);//debounce, no delay available
+ 
+  for ( int j = 0; j < 7; j++){
+     addCharToArrayFromLeft( myNumber, helpArray[j]);
+     
+      for (int i = 0; i<10000; i++ )
+        int h = digitalRead( 9);//debounce, no delay available
+ }
+ 
 }
 
 void timeAdjust( unsigned char whichDigit ){
@@ -281,22 +332,50 @@ void timeAdjust( unsigned char whichDigit ){
 
 }
 
-void recycleNum2PLUS(){
+void recycleNum2PLUS(char *array){
 
-  int h = myNumber2[0];
+  int h = array[0];
   for (int i = 0; i < 7 ; i++)
-    myNumber2[i] = myNumber2[i+1] ;
+    array[i] = array[i+1] ;
 
-  myNumber2[7] = h;
+  array[7] = h;
+ 
 }
 
-void recycleNum2MINUS(){
+void recycleNum2MINUS(char *array){
 
-  int h = myNumber2[7];
+  int h = array[7];
   for (int i = 7; i > 0 ; i--)
-    myNumber2[i] = myNumber2[i-1] ;
+    array[i] = array[i-1] ;
 
-  myNumber2[0] = h;
+  array[0] = h;
+ 
+}
+
+void addCharToArrayFromLeft(char *array, char c){
+
+  for (int i = 7; i > 0 ; i--)
+    array[i] = array[i-1] ;
+
+  array[0] = c;
+  
+  
+}
+
+void addCharToArrayFromRight(char *array, char c){
+
+  for (int i = 0; i < 7 ; i++)
+    array[i] = array[i+1] ;
+
+  array[7] = c;
+}
+
+void  myStr8Copy(    char *arraySource,  char *arrayDest ){
+  unsigned char counter = 0;
+  while ( counter < 8){
+    arrayDest[  counter ] = arraySource [ counter ];
+    counter++;
+  }
 }
 
 void setUpSelect( unsigned char whichTimeComponent, unsigned char oNoff){
@@ -347,6 +426,10 @@ void letterTransfer(int num){
    comma: 1000 0000
    
    */
+   
+   //ciao 13,19,11,22
+   //house 18, 22, 27, 25, 15
+   //plus 23,21, 27, 25
 
   //numbers
   if ( num == 1 )  SPI.transfer(255 - B00000110);//1
@@ -364,7 +447,7 @@ void letterTransfer(int num){
   //some letters
   if ( num == 11 )  SPI.transfer(255 - B01110111);//A
   if ( num == 12 )  SPI.transfer(255 - B01111111);//B like 8
-  if ( num == 13 )  SPI.transfer(255 - B01111001);//C
+  if ( num == 13 )  SPI.transfer(255 - B00111001);//C
   if ( num == 14 )  SPI.transfer(255 - B00111101);//D small like 6 without upper stroke
   if ( num == 15 )  SPI.transfer(255 - B01111001);//E
   if ( num == 16 )  SPI.transfer(255 - B01111000);//F
@@ -377,7 +460,7 @@ void letterTransfer(int num){
   //M
   //N
   if ( num == 22 )  SPI.transfer(255 - B00111111);//O like 0
-  if ( num == 23 )  SPI.transfer(255 - B01110111);//P
+  if ( num == 23 )  SPI.transfer(255 - B01110011);//P
   if ( num == 24 )  SPI.transfer(255 - B10111111);//Q like 0.
   //R
   if ( num == 25 )  SPI.transfer(255 - B01101101);//S like 5
@@ -396,6 +479,7 @@ void letterTransfer(int num){
 
 
 }
+
 
 
 

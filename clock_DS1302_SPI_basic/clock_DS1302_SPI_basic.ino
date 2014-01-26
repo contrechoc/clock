@@ -27,11 +27,12 @@ RTC_DS1307 RTC;
 // set pin 10 as the slave select for the digital pot:
 const int slaveSelectPin = 10;
 
-volatile int myNumber[] = {
+  int myNumber[] = {
   10 , 11, 12, 13, 13, 0, 10, 10};
 
-volatile int myNumber2[] = {
-  42 , 42, 42, 42, 42, 42, 42, 10};
+  char myNumber2[] = {
+  42 , 10, 42, 10, 42, 10, 42, 42};
+ 
 
 volatile int ledCounter = 0;
 volatile int ledCounter2 = 0;
@@ -352,22 +353,6 @@ ds1302_struct rtc;
     // Read all clock data at once (burst mode).
     DS1302_clock_burst_read( (uint8_t *) &rtc);
 
-/*
-    sprintf( buffer, "Time = %02d:%02d:%02d, ", \
-    bcd2bin( rtc.h24.Hour10, rtc.h24.Hour), \
-    bcd2bin( rtc.Minutes10, rtc.Minutes), \
-    bcd2bin( rtc.Seconds10, rtc.Seconds));
-    Serial.print(buffer);
-
-    sprintf(buffer, "Date(day of month) = %d, Month = %d, " \
-    "Day(day of week) = %d, Year = %d", \
-    bcd2bin( rtc.Date10, rtc.Date), \
-    bcd2bin( rtc.Month10, rtc.Month), \
-    rtc.Day, \
-    2000 + bcd2bin( rtc.Year10, rtc.Year));
-    Serial.println( buffer);
-*/
-
     myNumber[2] = rtc.h24.Hour10;
     myNumber[3] = rtc.h24.Hour;
     myNumber[0] = rtc.Date10;
@@ -393,15 +378,7 @@ ds1302_struct rtc;
 
     }
 
-    if ( tCounter%8 == 0 ) {
-
-      tCounter2++;
-      Serial.println(tCounter2%16);
-
-      if ( tCounter2%16 <  8 ) recycleNum2PLUS(); 
-      else recycleNum2MINUS();
-
-    }
+ 
 
     if ( digitalRead( controlPIN1) == LOW) { //changing the mode
 
@@ -460,23 +437,7 @@ ds1302_struct rtc;
 }
 
 
-void recycleNum2PLUS(){
-
-  int h = myNumber2[0];
-  for (int i = 0; i < 7 ; i++)
-    myNumber2[i] = myNumber2[i+1] ;
-
-  myNumber2[7] = h;
-}
-
-void recycleNum2MINUS(){
-
-  int h = myNumber2[7];
-  for (int i = 7; i > 0 ; i--)
-    myNumber2[i] = myNumber2[i-1] ;
-
-  myNumber2[0] = h;
-}
+ 
 
 void letterTransfer(int num){
 
@@ -599,9 +560,9 @@ int nowDay, int nowHour, int  nowMinutes, int  nowSeconds ){
     else
     {
       lengthMonth = 30;
-      if (nowMonth == 2) lengthMonth = 28;
-      if ( (nowYear % 4 == 0 ) && (nowMonth == 2)) lengthMonth = 29;
-    }
+      if (nowMonth == 2) lengthMonth = 29; //leaving out the leap year construction as this demands also the year which makes setting more complicated
+     // if ( (now.year() % 4 == 0 ) && (nowMonth == 2)) lengthMonth = 29;
+   }
   }
 
   if ( whichDigit == 0){
